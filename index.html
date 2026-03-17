@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Long & Healthy Enterprise</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDelZ3aOX8L4ijdA0CYBKidhaG4_J-KR3E",
+  authDomain: "long-and-healthy.firebaseapp.com",
+  projectId: "long-and-healthy",
+  storageBucket: "long-and-healthy.firebasestorage.app",
+  messagingSenderId: "502637846240",
+  appId: "1:502637846240:web:3b1e89b3dc18c38ce2fa85"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+</script>
+
+<style>
+:root {
+  --forest:#0d1f0f;--deep:#111c12;--moss:#1e3a1f;--leaf:#2d5a2e;
+  --sage:#4a7c4e;--mint:#7fb882;--gold:#c9a84c;--gold-light:#e8c97a;
+  --cream:#f5f0e8;--white:#fdfcf9;--muted:rgba(245,240,232,0.45);
+  --border:rgba(201,168,76,0.2);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Jost',sans-serif;background:var(--forest);color:var(--cream);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 10% 20%,rgba(45,90,46,.25) 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 90% 80%,rgba(26,60,27,.3) 0%,transparent 60%),radial-gradient(ellipse 40% 40% at 50% 50%,rgba(201,168,76,.04) 0%,transparent 70%);pointer-events:none;z-index:0;}
+
+/* PARTICLES */
+.particles{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden;}
+.particle{position:absolute;width:2px;height:2px;background:var(--gold);border-radius:50%;opacity:0;animation:float-up linear infinite;}
+@keyframes float-up{0%{transform:translateY(100vh) translateX(0);opacity:0;}10%{opacity:.6;}90%{opacity:.2;}100%{transform:translateY(-10vh) translateX(40px);opacity:0;}}
+@keyframes sway{0%,100%{transform:rotate(-8deg);}50%{transform:rotate(8deg);}}
+@keyframes rise{from{opacity:0;transform:translateY(40px);}to{opacity:1;transform:translateY(0);}}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes pop{from{transform:scale(0);}to{transform:scale(1);}}
+@keyframes modal-pop{from{opacity:0;transform:scale(.9) translateY(20px);}to{opacity:1;transform:scale(1) translateY(0);}}
+
+/* LOADING */
+#loading-screen{position:fixed;inset:0;background:var(--forest);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;}
+.loading-leaf{font-size:48px;animation:sway 2s ease-in-out infinite;}
+.loading-spinner{width:36px;height:36px;border:2px solid rgba(201,168,76,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
+.loading-text{font-size:12px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+
+/* SCREENS */
+.screen{display:none;position:relative;z-index:10;min-height:100vh;}
+.screen.active{display:flex;flex-direction:column;}
+
+/* AUTH */
+#auth-screen{align-items:center;justify-content:center;padding:24px;}
+.auth-container{width:100%;max-width:440px;animation:rise .8s cubic-bezier(.16,1,.3,1) both;}
+.brand-mark{text-align:center;margin-bottom:40px;}
+.brand-leaf{font-size:42px;display:block;margin-bottom:12px;animation:sway 4s ease-in-out infinite;}
+.brand-name{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:300;letter-spacing:2px;color:var(--white);line-height:1.1;}
+.brand-name span{color:var(--gold);font-style:italic;}
+.brand-tagline{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-top:8px;}
+.auth-card{background:rgba(30,58,31,.4);border:1px solid var(--border);border-radius:20px;padding:36px;backdrop-filter:blur(20px);box-shadow:0 40px 80px rgba(0,0,0,.5),inset 0 1px 0 rgba(201,168,76,.15);}
+.auth-tabs{display:flex;background:rgba(0,0,0,.3);border-radius:10px;padding:4px;margin-bottom:28px;}
+.auth-tab{flex:1;padding:9px;border:none;background:none;color:var(--muted);font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:7px;transition:all .25s;}
+.auth-tab.active{background:var(--gold);color:var(--forest);font-weight:600;}
+.field{margin-bottom:18px;}
+.field label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-light);margin-bottom:7px;font-weight:500;}
+.field input{width:100%;padding:12px 16px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:10px;color:var(--white);font-family:'Jost',sans-serif;font-size:14px;outline:none;transition:border .2s,box-shadow .2s;}
+.field input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.15);}
+.field input::placeholder{color:rgba(245,240,232,.3);}
+.btn-gold{width:100%;padding:14px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border:none;border-radius:10px;color:var(--forest);font-family:'Jost',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;}
+.btn-gold:disabled{opacity:.6;cursor:not-allowed;}
+.btn-gold::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent,rgba(255,255,255,.2),transparent);transform:translateX(-100%);transition:transform .5s;}
+.btn-gold:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 24px rgba(201,168,76,.35);}
+.btn-gold:hover:not(:disabled)::after{transform:translateX(100%);}
+.auth-error{font-size:12px;color:#ff7b7b;text-align:center;margin-top:12px;min-height:16px;}
+.forgot-link{font-size:12px;color:var(--gold);cursor:pointer;text-align:center;display:block;margin-top:12px;opacity:.8;transition:opacity .2s;}
+.forgot-link:hover{opacity:1;text-decoration:underline;}
+
+/* TOPBAR */
+.topbar{background:rgba(13,31,15,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-brand{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--white);letter-spacing:1px;}
+.topbar-brand span{color:var(--gold);font-style:italic;}
+.topbar-right{display:flex;align-items:center;gap:16px;}
+.user-chip{display:flex;align-items:center;gap:8px;background:rgba(45,90,46,.4);border:1px solid var(--border);border-radius:30px;padding:5px 14px 5px 6px;}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--sage));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--forest);}
+.user-name-display{font-size:12px;color:var(--cream);}
+.signout{background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;letter-spacing:1px;text-transform:uppercase;font-family:'Jost',sans-serif;transition:color .2s;padding:4px 8px;border-radius:5px;}
+.signout:hover{color:var(--gold);}
+
+/* CONTENT */
+.app-content{flex:1;padding:40px 28px;max-width:1100px;width:100%;margin:0 auto;}
+.hero-text{text-align:center;margin-bottom:52px;animation:rise .6s ease both;}
+.hero-text h1{font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:300;color:var(--white);line-height:1.1;margin-bottom:12px;}
+.hero-text h1 em{color:var(--gold);font-style:italic;}
+.hero-text p{font-size:14px;color:var(--muted);letter-spacing:1px;}
+.section-label{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:24px;display:flex;align-items:center;gap:12px;}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* PRODUCTS */
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px;margin-bottom:60px;}
+.product-card{border:1px solid var(--border);border-radius:18px;overflow:hidden;cursor:pointer;transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s;animation:rise .5s ease both;position:relative;}
+.product-card:hover{transform:translateY(-6px);box-shadow:0 24px 60px rgba(0,0,0,.5),0 0 0 1px rgba(201,168,76,.3);}
+.product-card:nth-child(2){animation-delay:.1s;}.product-card:nth-child(3){animation-delay:.2s;}.product-card:nth-child(4){animation-delay:.3s;}
+.product-img{height:180px;display:flex;align-items:center;justify-content:center;font-size:64px;position:relative;overflow:hidden;}
+.product-img::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(201,168,76,.1),transparent 70%);}
+.product-body{padding:20px;}
+.product-name{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--white);margin-bottom:6px;}
+.product-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px;}
+.product-footer{display:flex;align-items:center;justify-content:space-between;}
+.product-price{font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--gold);font-weight:300;}
+.product-price span{font-size:13px;color:var(--muted);font-family:'Jost',sans-serif;}
+.add-btn{padding:8px 18px;background:rgba(201,168,76,.15);border:1px solid var(--border);border-radius:30px;color:var(--gold-light);font-family:'Jost',sans-serif;font-size:12px;font-weight:500;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+.add-btn:hover{background:var(--gold);color:var(--forest);border-color:var(--gold);}
+
+/* CART BAR */
+.cart-bar{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);background:rgba(13,31,15,.97);border:1px solid var(--gold);border-radius:60px;padding:14px 28px;display:flex;align-items:center;gap:20px;box-shadow:0 20px 60px rgba(0,0,0,.6);backdrop-filter:blur(20px);z-index:200;transition:transform .4s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;}
+.cart-bar.visible{transform:translateX(-50%) translateY(0);}
+.cart-count{background:var(--gold);color:var(--forest);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+.cart-label{font-size:13px;color:var(--cream);}
+.cart-total{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);}
+.checkout-btn{padding:10px 24px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border:none;border-radius:30px;color:var(--forest);font-family:'Jost',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+.checkout-btn:hover{transform:scale(1.04);box-shadow:0 8px 20px rgba(201,168,76,.4);}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:300;display:none;align-items:center;justify-content:center;padding:24px;}
+.overlay.open{display:flex;}
+.modal{background:var(--deep);border:1px solid var(--border);border-radius:24px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;animation:modal-pop .4s cubic-bezier(.34,1.56,.64,1) both;box-shadow:0 40px 100px rgba(0,0,0,.7),inset 0 1px 0 rgba(201,168,76,.1);}
+.modal-header{padding:28px 28px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400;color:var(--white);}
+.close-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--muted);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.close-btn:hover{border-color:var(--gold);color:var(--gold);}
+.modal-body{padding:24px 28px;}
+.cart-item{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid rgba(201,168,76,.1);}
+.cart-item-icon{font-size:28px;}
+.cart-item-info{flex:1;}
+.cart-item-name{font-size:14px;font-weight:500;color:var(--white);margin-bottom:2px;}
+.cart-item-price{font-size:12px;color:var(--gold);}
+.qty-ctrl{display:flex;align-items:center;gap:10px;}
+.qty-btn{width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--cream);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.qty-btn:hover{border-color:var(--gold);color:var(--gold);}
+.qty-num{font-size:14px;font-weight:600;color:var(--white);min-width:20px;text-align:center;}
+.delivery-section{margin-top:24px;}
+.delivery-total{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-top:1px solid var(--border);margin-top:16px;}
+.delivery-total .label{font-size:13px;color:var(--muted);}
+.delivery-total .amount{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--gold);}
+.modal-footer{padding:0 28px 28px;display:flex;gap:12px;}
+.btn-outline{flex:1;padding:13px;background:none;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Jost',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold);}
+.btn-place{flex:2;padding:13px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border:none;border-radius:10px;color:var(--forest);font-family:'Jost',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+.btn-place:disabled{opacity:.6;cursor:not-allowed;}
+.btn-place:hover:not(:disabled){box-shadow:0 8px 24px rgba(201,168,76,.4);transform:translateY(-1px);}
+
+/* SUCCESS */
+.success-state{text-align:center;padding:52px 28px;display:none;}
+.success-state.show{display:block;}
+.success-icon{font-size:64px;margin-bottom:20px;animation:pop .5s cubic-bezier(.34,1.56,.64,1) both;}
+.success-state h2{font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--white);margin-bottom:10px;}
+.success-state p{font-size:13px;color:var(--muted);line-height:1.7;}
+.eta-badge{display:inline-block;margin-top:20px;background:rgba(127,184,130,.15);border:1px solid rgba(127,184,130,.4);border-radius:30px;padding:10px 24px;color:var(--mint);font-size:13px;font-weight:500;letter-spacing:1px;}
+
+/* ORDERS */
+.order-card{background:rgba(30,58,31,.25);border:1px solid var(--border);border-radius:14px;padding:18px 22px;margin-bottom:14px;display:flex;align-items:center;gap:16px;animation:rise .4s ease both;}
+.order-num{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);flex-shrink:0;}
+.order-info{flex:1;}
+.order-items{font-size:13px;color:var(--white);margin-bottom:3px;}
+.order-date{font-size:11px;color:var(--muted);}
+.order-status{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;padding:5px 12px;border-radius:30px;font-weight:600;flex-shrink:0;}
+.status-delivered{background:rgba(127,184,130,.15);color:var(--mint);border:1px solid rgba(127,184,130,.3);}
+.status-pending{background:rgba(201,168,76,.15);color:var(--gold-light);border:1px solid rgba(201,168,76,.3);}
+.empty-orders{text-align:center;padding:52px 20px;color:var(--muted);}
+.empty-orders .big{font-size:48px;margin-bottom:14px;}
+.empty-orders p{font-size:13px;line-height:1.7;}
+
+::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+@media(max-width:600px){.hero-text h1{font-size:34px;}.app-content{padding:24px 16px;}.topbar{padding:0 16px;}.cart-bar{width:calc(100% - 32px);justify-content:space-between;}}
+</style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<!-- LOADING -->
+<div id="loading-screen">
+  <div class="loading-leaf">🌿</div>
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Loading</div>
+</div>
+
+<!-- AUTH -->
+<div class="screen" id="auth-screen">
+  <div class="auth-container">
+    <div class="brand-mark">
+      <span class="brand-leaf">🌿</span>
+      <div class="brand-name">Long & <span>Healthy</span><br>Enterprise</div>
+      <div class="brand-tagline">Premium Hair Care · Est. 2024</div>
+    </div>
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
+        <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
+      </div>
+      <div id="login-form">
+        <div class="field"><label>Email Address</label><input id="login-email" type="email" placeholder="you@example.com"></div>
+        <div class="field"><label>Password</label><input id="login-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+        <button class="btn-gold" id="login-btn" onclick="doLogin()">Sign In →</button>
+        <span class="forgot-link" onclick="doForgotPassword()">Forgot your password?</span>
+      </div>
+      <div id="register-form" style="display:none">
+        <div class="field"><label>Full Name</label><input id="reg-name" type="text" placeholder="Your full name"></div>
+        <div class="field"><label>Email Address</label><input id="reg-email" type="email" placeholder="you@example.com"></div>
+        <div class="field"><label>Phone Number</label><input id="reg-phone" type="tel" placeholder="+1 (555) 000-0000"></div>
+        <div class="field"><label>Delivery Address</label><input id="reg-address" type="text" placeholder="Street, City, State"></div>
+        <div class="field"><label>Password</label><input id="reg-pass" type="password" placeholder="Min. 6 characters" onkeydown="if(event.key==='Enter')doRegister()"></div>
+        <button class="btn-gold" id="register-btn" onclick="doRegister()">Create Account →</button>
+      </div>
+      <div class="auth-error" id="auth-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="screen" id="app-screen">
+  <div class="topbar">
+    <div class="topbar-brand">Long & <span>Healthy</span></div>
+    <div class="topbar-right">
+      <div class="user-chip">
+        <div class="user-avatar" id="user-avatar-text">?</div>
+        <div class="user-name-display" id="user-name-display">Guest</div>
+      </div>
+      <button class="signout" onclick="doSignOut()">Sign Out</button>
+    </div>
+  </div>
+  <div class="app-content">
+    <div class="hero-text">
+      <h1>Nourish Your Hair,<br><em>Naturally.</em></h1>
+      <p>Handcrafted treatments — delivered to your door within minutes</p>
+    </div>
+    <div class="section-label">Our Products</div>
+    <div class="products-grid" id="products-grid"></div>
+    <div>
+      <div class="section-label">Your Orders</div>
+      <div id="orders-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CART BAR -->
+<div class="cart-bar" id="cart-bar">
+  <div class="cart-count" id="cart-count">0</div>
+  <div class="cart-label">items in cart</div>
+  <div class="cart-total" id="cart-total">$0</div>
+  <button class="checkout-btn" onclick="openCart()">Checkout</button>
+</div>
+
+<!-- ORDER MODAL -->
+<div class="overlay" id="cart-overlay" onclick="overlayClick(event)">
+  <div class="modal">
+    <div id="modal-main">
+      <div class="modal-header">
+        <div class="modal-title">Your Cart</div>
+        <button class="close-btn" onclick="closeCart()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="cart-items-list"></div>
+        <div class="delivery-section">
+          <div class="section-label">Delivery Details</div>
+          <div class="field"><label>Delivery Address</label><input id="delivery-addr" type="text" placeholder="Confirm your address"></div>
+          <div class="field"><label>Special Instructions (optional)</label><input id="delivery-note" type="text" placeholder="e.g. Leave at door, ring bell..."></div>
+        </div>
+        <div class="delivery-total">
+          <div class="label">Order Total</div>
+          <div class="amount" id="modal-total">$0</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" onclick="closeCart()">Keep Shopping</button>
+        <button class="btn-place" id="place-btn" onclick="placeOrder()">Place Order 🌿</button>
+      </div>
+    </div>
+    <div class="success-state" id="success-state">
+      <div class="success-icon">✅</div>
+      <h2>Order Placed!</h2>
+      <p>Thank you! Your Long & Healthy products<br>are being prepared with love.<br>Our team has been notified and your<br>order is on its way to you.</p>
+      <div class="eta-badge">⏱ Estimated arrival: 15–30 minutes</div>
+    </div>
+  </div>
+</div>
+
+<div id="lhe-toast" style="position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(13,31,15,.97);border:1px solid rgba(201,168,76,.4);border-radius:30px;padding:10px 22px;color:var(--cream);font-size:13px;font-family:Jost,sans-serif;z-index:999;opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;"></div>
+
+<script>
+const PRODUCTS = [
+  {id:'p1',name:'Argan Oil Treatment', emoji:'🫙',desc:'Deep-conditioning cream with pure Moroccan argan oil. Restores shine and softness to damaged hair.',price:24.99,bg:'linear-gradient(135deg,#1e3a1f,#2d5a2e)'},
+  {id:'p2',name:'Nourishing Shampoo',  emoji:'🧴',desc:'Sulfate-free formula enriched with aloe vera and coconut milk for a gentle, luxurious cleanse.',   price:18.99,bg:'linear-gradient(135deg,#1a3830,#2a5040)'},
+  {id:'p3',name:'Growth Serum Cream',  emoji:'💚',desc:'Biotin-infused treatment cream that strengthens follicles and promotes healthy hair growth.',        price:32.99,bg:'linear-gradient(135deg,#2a3520,#3a5a28)'},
+  {id:'p4',name:'Hydra Repair Mask',   emoji:'🌿',desc:'Intensive overnight mask with shea butter and keratin proteins. Wake up to silky, manageable hair.', price:27.99,bg:'linear-gradient(135deg,#1e2a38,#2a4050)'},
+];
+
+let currentUser=null, currentProfile=null, cart={}, ordersUnsub=null;
+
+// PARTICLES
+(function(){
+  const c=document.getElementById('particles');
+  for(let i=0;i<18;i++){
+    const p=document.createElement('div');p.className='particle';
+    p.style.left=Math.random()*100+'vw';
+    p.style.width=p.style.height=(Math.random()*2+1)+'px';
+    p.style.animationDuration=(Math.random()*12+8)+'s';
+    p.style.animationDelay=(Math.random()*10)+'s';
+    c.appendChild(p);
+  }
+})();
+
+// FIREBASE AUTH LISTENER
+auth.onAuthStateChanged(async user=>{
+  document.getElementById('loading-screen').style.display='none';
+  if(user){
+    currentUser=user;
+    try{
+      const snap=await db.collection('users').doc(user.uid).get();
+      currentProfile=snap.exists?snap.data():{name:user.displayName||user.email,address:''};
+    }catch(e){currentProfile={name:user.displayName||user.email,address:''};}
+    showApp();
+  }else{
+    currentUser=null;currentProfile=null;
+    showAuth();
+  }
+});
+
+function showApp(){
+  document.getElementById('auth-screen').classList.remove('active');
+  document.getElementById('app-screen').classList.add('active');
+  const name=currentProfile?.name||currentUser.email;
+  document.getElementById('user-name-display').textContent=name.split(' ')[0];
+  document.getElementById('user-avatar-text').textContent=name.charAt(0).toUpperCase();
+  document.getElementById('delivery-addr').value=currentProfile?.address||'';
+  renderProducts();
+  subscribeOrders();
+}
+function showAuth(){
+  document.getElementById('app-screen').classList.remove('active');
+  document.getElementById('auth-screen').classList.add('active');
+  if(ordersUnsub){ordersUnsub();ordersUnsub=null;}
+}
+
+// AUTH TABS
+function switchAuthTab(tab){
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.getElementById('login-form').style.display=tab==='login'?'block':'none';
+  document.getElementById('register-form').style.display=tab==='register'?'block':'none';
+  setAuthError('');
+}
+function setAuthError(msg){document.getElementById('auth-error').textContent=msg;}
+
+// LOGIN
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  if(!email||!pass){setAuthError('Please fill in all fields.');return;}
+  const btn=document.getElementById('login-btn');
+  btn.disabled=true;btn.textContent='Signing in…';
+  try{
+    await auth.signInWithEmailAndPassword(email,pass);
+    setAuthError('');
+  }catch(e){
+    setAuthError(friendlyError(e.code));
+    btn.disabled=false;btn.textContent='Sign In →';
+  }
+}
+
+// REGISTER
+async function doRegister(){
+  const name=document.getElementById('reg-name').value.trim();
+  const email=document.getElementById('reg-email').value.trim();
+  const phone=document.getElementById('reg-phone').value.trim();
+  const address=document.getElementById('reg-address').value.trim();
+  const pass=document.getElementById('reg-pass').value;
+  if(!name||!email||!phone||!address||!pass){setAuthError('Please fill in all fields.');return;}
+  if(pass.length<6){setAuthError('Password must be at least 6 characters.');return;}
+  const btn=document.getElementById('register-btn');
+  btn.disabled=true;btn.textContent='Creating account…';
+  try{
+    const cred=await auth.createUserWithEmailAndPassword(email,pass);
+    await cred.user.updateProfile({displayName:name});
+    await db.collection('users').doc(cred.user.uid).set({
+      name,email,phone,address,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    setAuthError('');
+  }catch(e){
+    setAuthError(friendlyError(e.code));
+    btn.disabled=false;btn.textContent='Create Account →';
+  }
+}
+
+// FORGOT PASSWORD
+async function doForgotPassword(){
+  const email=document.getElementById('login-email').value.trim();
+  if(!email){setAuthError('Enter your email above first.');return;}
+  try{
+    await auth.sendPasswordResetEmail(email);
+    setAuthError('');showToast('📧 Reset link sent to your email!');
+  }catch(e){setAuthError(friendlyError(e.code));}
+}
+
+// SIGN OUT
+async function doSignOut(){cart={};updateCartBar();await auth.signOut();}
+
+// FRIENDLY ERRORS
+function friendlyError(code){
+  return({'auth/user-not-found':'No account found with this email.','auth/wrong-password':'Incorrect password. Please try again.','auth/invalid-credential':'Incorrect email or password.','auth/email-already-in-use':'An account with this email already exists.','auth/invalid-email':'Please enter a valid email address.','auth/weak-password':'Password must be at least 6 characters.','auth/too-many-requests':'Too many attempts. Please wait and try again.','auth/network-request-failed':'Network error. Check your connection.'})[code]||'Something went wrong. Please try again.';
+}
+
+// PRODUCTS
+function renderProducts(){
+  document.getElementById('products-grid').innerHTML=PRODUCTS.map(p=>`
+    <div class="product-card" style="background:${p.bg}">
+      <div class="product-img">${p.emoji}</div>
+      <div class="product-body">
+        <div class="product-name">${p.name}</div>
+        <div class="product-desc">${p.desc}</div>
+        <div class="product-footer">
+          <div class="product-price">$${p.price.toFixed(2)} <span>/ unit</span></div>
+          <button class="add-btn" onclick="addToCart('${p.id}')">+ Add</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// CART
+function addToCart(id){cart[id]=(cart[id]||0)+1;updateCartBar();showToast('Added to cart 🌿');}
+function updateCartBar(){
+  const count=Object.values(cart).reduce((a,b)=>a+b,0);
+  document.getElementById('cart-count').textContent=count;
+  document.getElementById('cart-total').textContent='$'+calcTotal().toFixed(2);
+  document.getElementById('cart-bar').classList.toggle('visible',count>0);
+}
+function calcTotal(){return Object.entries(cart).reduce((s,[id,q])=>{const p=PRODUCTS.find(x=>x.id===id);return s+(p?p.price*q:0);},0);}
+function openCart(){
+  document.getElementById('modal-main').style.display='block';
+  document.getElementById('success-state').classList.remove('show');
+  renderCartItems();
+  document.getElementById('cart-overlay').classList.add('open');
+}
+function closeCart(){document.getElementById('cart-overlay').classList.remove('open');}
+function overlayClick(e){if(e.target===document.getElementById('cart-overlay'))closeCart();}
+function renderCartItems(){
+  const entries=Object.entries(cart).filter(([,q])=>q>0);
+  const list=document.getElementById('cart-items-list');
+  if(!entries.length){list.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Your cart is empty.</div>';return;}
+  list.innerHTML=entries.map(([id,qty])=>{
+    const p=PRODUCTS.find(x=>x.id===id);
+    return `<div class="cart-item"><div class="cart-item-icon">${p.emoji}</div><div class="cart-item-info"><div class="cart-item-name">${p.name}</div><div class="cart-item-price">$${(p.price*qty).toFixed(2)}</div></div><div class="qty-ctrl"><button class="qty-btn" onclick="changeQty('${id}',-1)">−</button><div class="qty-num">${qty}</div><button class="qty-btn" onclick="changeQty('${id}',1)">+</button></div></div>`;
+  }).join('');
+  document.getElementById('modal-total').textContent='$'+calcTotal().toFixed(2);
+}
+function changeQty(id,delta){
+  cart[id]=Math.max(0,(cart[id]||0)+delta);
+  if(!cart[id])delete cart[id];
+  updateCartBar();renderCartItems();
+}
+
+// PLACE ORDER → FIRESTORE
+async function placeOrder(){
+  if(!currentUser)return;
+  const entries=Object.entries(cart).filter(([,q])=>q>0);
+  if(!entries.length){showToast('Your cart is empty!');return;}
+  const addr=document.getElementById('delivery-addr').value.trim();
+  if(!addr){showToast('Please enter a delivery address.');return;}
+  const btn=document.getElementById('place-btn');
+  btn.disabled=true;btn.textContent='Placing order…';
+  try{
+    await db.collection('orders').add({
+      userId:      currentUser.uid,
+      userName:    currentProfile?.name||currentUser.email,
+      userEmail:   currentUser.email,
+      userPhone:   currentProfile?.phone||'',
+      items:       entries.map(([id,qty])=>{const p=PRODUCTS.find(x=>x.id===id);return{id:p.id,name:p.name,emoji:p.emoji,qty,price:p.price};}),
+      total:       calcTotal(),
+      address:     addr,
+      note:        document.getElementById('delivery-note').value,
+      status:      'pending',
+      createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    cart={};updateCartBar();
+    btn.disabled=false;btn.textContent='Place Order 🌿';
+    document.getElementById('modal-main').style.display='none';
+    document.getElementById('success-state').classList.add('show');
+    setTimeout(()=>closeCart(),3800);
+  }catch(e){
+    showToast('❌ Order failed. Check your connection.');
+    btn.disabled=false;btn.textContent='Place Order 🌿';
+  }
+}
+
+// SUBSCRIBE TO ORDERS (real-time)
+function subscribeOrders(){
+  if(ordersUnsub){ordersUnsub();ordersUnsub=null;}
+  ordersUnsub=db.collection('orders')
+    .where('userId','==',currentUser.uid)
+    .orderBy('createdAt','desc')
+    .onSnapshot(snap=>{
+      const list=document.getElementById('orders-list');
+      if(snap.empty){
+        list.innerHTML=`<div class="empty-orders"><div class="big">🌿</div><p>You haven't placed any orders yet.<br>Browse our products and treat your hair!</p></div>`;
+        return;
+      }
+      list.innerHTML=snap.docs.map(doc=>{
+        const o=doc.data();
+        const dateStr=o.createdAt?.toDate?o.createdAt.toDate().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}):'Just now';
+        return `<div class="order-card"><div class="order-num">#${doc.id.slice(-6).toUpperCase()}</div><div class="order-info"><div class="order-items">${(o.items||[]).map(i=>`${i.qty}× ${i.name}`).join(', ')}</div><div class="order-date">${dateStr} · $${(o.total||0).toFixed(2)}</div></div><div class="order-status ${o.status==='delivered'?'status-delivered':'status-pending'}">${o.status}</div></div>`;
+      }).join('');
+    },err=>{
+      if(err.code==='failed-precondition'){
+        document.getElementById('orders-list').innerHTML=`<div class="empty-orders"><div class="big">⚙️</div><p>Setting up your orders index…<br>This takes a moment on first use.<br>Please refresh in 30 seconds.</p></div>`;
+      }
+    });
+}
+
+// TOAST
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('lhe-toast');
+  t.textContent=msg;t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(20px)';},2400);
+}
+</script>
+</body>
+</html>
