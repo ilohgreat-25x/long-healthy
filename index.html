@@ -7,6 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <!-- Firebase SDKs -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init('YOUR_EMAILJS_PUBLIC_KEY');</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -487,6 +489,25 @@ async function placeOrder(){
       note:        document.getElementById('delivery-note').value,
       status:      'pending',
       createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    // ── Send order confirmation email via EmailJS ──
+    const orderItems = entries.map(([id,qty])=>{
+      const p=PRODUCTS.find(x=>x.id===id);
+      return qty+'× '+p.name+' ($'+p.price.toFixed(2)+' each)';
+    }).join('\n');
+    emailjs.send('service_ncuc8pg','template_n5edric',{
+      customer_name:  currentProfile?.name || currentUser.email,
+      customer_email: currentUser.email,
+      customer_phone: currentProfile?.phone || 'Not provided',
+      order_items:    orderItems,
+      order_total:    '$'+calcTotal().toFixed(2),
+      delivery_address: addr,
+      delivery_note:  document.getElementById('delivery-note').value || 'None',
+      order_date:     new Date().toLocaleString('en-US',{month:'long',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}),
+    }).then(()=>{
+      console.log('Order confirmation email sent');
+    }).catch(err=>{
+      console.warn('Email send failed:',err);
     });
     cart={};updateCartBar();
     btn.disabled=false;btn.textContent='Place Order 🌿';
